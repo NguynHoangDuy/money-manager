@@ -1,10 +1,13 @@
 package duy.hoang.server.controller;
 
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import duy.hoang.server.dto.AuthDTO;
 import duy.hoang.server.dto.ProfileDTO;
 import duy.hoang.server.service.ProfileService;
 import lombok.RequiredArgsConstructor;
@@ -33,4 +36,20 @@ public class ProfileController {
                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Activation token not found or already use");
           }
      }
+
+     @PostMapping("/login")
+     public ResponseEntity<Map<String, Object>> login(@RequestBody AuthDTO authDTO) {
+          try {
+               if (!profileService.isAccountActive((authDTO.getEmail()))) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                              .body(Map.of("message", "Account is not active. PLease activate your account first"));
+               }
+
+               Map<String, Object> response = profileService.authenticateAndGenerateToken(authDTO);
+               return ResponseEntity.ok(response);
+          } catch (Exception e) {
+               return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", e.getMessage()));
+          }
+     }
+
 }

@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class AppUserDetails implements UserDetailsService {
+public class AppUserDetailsService implements UserDetailsService {
      private final ProfileRepository profileRepository;
 
      public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {

@@ -1,16 +1,21 @@
 package duy.hoang.server.service;
 
+import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import duy.hoang.server.dto.AuthDTO;
 import duy.hoang.server.dto.ProfileDTO;
 import duy.hoang.server.entity.ProfileEntity;
 import duy.hoang.server.repository.ProfileRepository;
+import duy.hoang.server.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -19,6 +24,8 @@ public class ProfileService {
      private final ProfileRepository profileRepository;
      private final EmailService emailService;
      private final PasswordEncoder passwordEncoder;
+     private final AuthenticationManager authenticationManager;
+     private final JwtUtil jwtUtil;
 
      public ProfileDTO registerProfile(ProfileDTO profileDTO) {
           ProfileEntity newProfile = toEntity(profileDTO);
@@ -91,6 +98,19 @@ public class ProfileService {
                     .profileImageUrl(currentUser.getProfileImageUrl())
                     .createdAt(currentUser.getCreatedAt())
                     .updatedAt(currentUser.getUpdatedAt()).build();
+     }
+
+     public Map<String, Object> authenticateAndGenerateToken(AuthDTO authDTO) {
+          try {
+               authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authDTO.getEmail(), authDTO.getPassword()));
+               String token = jwtUtil.generateToken(authDTO.getEmail());
+               return Map.of(
+                    "token", token,
+                    "user", getPublicProfile(authDTO.getEmail())
+               );
+          } catch (Exception e) {
+               throw new RuntimeException("Invalid email or password");
+          }
      }
 
 }
